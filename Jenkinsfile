@@ -6,6 +6,11 @@ pipeline {
   }
 
   stages {
+    stage('Clean Workspace') {
+      steps {
+        cleanWSpace()
+      }
+    }
 
     stage('Checkout') {
       steps {
@@ -22,6 +27,12 @@ pipeline {
     stage('Build') {
       steps {
         sh 'npm run build'
+      }
+    }
+    
+    stage('Test') {
+      steps {
+        sh 'npm test'
       }
     }
 
