@@ -29,7 +29,7 @@ pipeline {
         sh 'npm run build'
       }
     }
-    
+
     stage('Test') {
       steps {
         sh 'npm test'
@@ -39,9 +39,9 @@ pipeline {
   post {
     success {
       echo '✅ Build completed successfully!'
-    }
+        }
     failure {
       echo '❌ Build failed.'
+        }
     }
-  }
 }
