@@ -35,6 +35,7 @@ pipeline {
         sh 'npm test'
       }
     }
+  }
 
   post {
     success {
@@ -43,6 +44,5 @@ pipeline {
     failure {
       echo '❌ Build failed.'
         }
-    }
     }
 }
