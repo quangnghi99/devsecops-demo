@@ -1,3 +1,6 @@
+// Image info
+// Registry info
+
 pipeline {
   agent { label 'jenkins-agent' }
 
@@ -20,28 +23,19 @@ pipeline {
       }
     }
 
-    stage('Debug') {
-      steps {
-        sh '''
-          pwd
-          ls -la
-        '''
-      }
-    }
-
     stage('Install Dependencies') {
       steps {
         sh 'npm ci'
       }
     }
 
-    stage('Lint') {
+    stage('Static Code Analysis') {
       steps {
         sh 'npm run lint'
       }
     }
 
-    stage('Test') {
+    stage('Unit Test') {
       steps {
         sh 'npm test'
       }
