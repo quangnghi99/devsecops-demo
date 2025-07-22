@@ -4,6 +4,11 @@ pipeline {
   environment {
     NODE_ENV = 'production'
   }
+  options {
+    skipStagesAfterUnstable()
+    timestamps()
+  }
+
 
   stages {
     stage('Clean Workspace') {
@@ -24,15 +29,21 @@ pipeline {
       }
     }
 
-    stage('Build') {
+    stage('Lint') {
       steps {
-        sh 'npm run build'
+        sh 'npm run lint'
       }
     }
 
     stage('Test') {
       steps {
         sh 'npm test'
+      }
+    }
+
+    stage('Build') {
+      steps {
+        sh 'npm run build'
       }
     }
   }
