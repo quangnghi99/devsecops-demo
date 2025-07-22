@@ -4,6 +4,10 @@
 pipeline {
   agent { label 'jenkins-agent' }
 
+  //environment {
+  //  NODE_ENV = "$env.BRANCH_NAME"
+  //}
+
   options {
     skipStagesAfterUnstable()
     timestamps()
@@ -20,6 +24,15 @@ pipeline {
     stage('Checkout') {
       steps {
         checkout scm
+      }
+    }
+
+    stage("Sonarqube Analysis "){
+      steps{
+        withSonarQubeEnv('sonar-server') {
+            sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=TicTacToe \
+            -Dsonar.projectKey=TicTacToe '''
+        }
       }
     }
 
