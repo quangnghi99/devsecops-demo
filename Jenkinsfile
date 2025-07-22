@@ -37,6 +37,14 @@ pipeline {
       }
     }
 
+    stage("Quality Gate"){
+      steps {
+        script {
+          waitForQualityGate abortPipeline: false
+        }
+      } 
+    }
+
     stage('Install Dependencies') {
       steps {
         sh 'npm ci'
@@ -52,6 +60,13 @@ pipeline {
     stage('Unit Test') {
       steps {
         sh 'npm test'
+      }
+    }
+
+    stage('OWASP FS SCAN') {
+      steps {
+        dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP'
+        dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
       }
     }
 
