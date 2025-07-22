@@ -4,9 +4,10 @@
 pipeline {
   agent { label 'jenkins-agent' }
 
-  //environment {
-  //  NODE_ENV = "$env.BRANCH_NAME"
-  //}
+  environment {
+    //NODE_ENV = "$env.BRANCH_NAME"
+    SCANNER_HOME=tool 'sonar-scanner'
+  }
 
   options {
     skipStagesAfterUnstable()
