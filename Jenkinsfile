@@ -23,9 +23,18 @@ pipeline {
       }
     }
 
+    stage('Debug') {
+      steps {
+        sh '''
+          pwd
+          ls -la
+        '''
+      }
+    }
+
     stage('Install Dependencies') {
       steps {
-        sh 'npm install --all'
+        sh 'npm ci'
       }
     }
 
