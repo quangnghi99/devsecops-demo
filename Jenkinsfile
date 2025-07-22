@@ -1,9 +1,6 @@
 pipeline {
   agent { label 'jenkins-agent' }
 
-  environment {
-    NODE_ENV = 'production'
-  }
   options {
     skipStagesAfterUnstable()
     timestamps()
