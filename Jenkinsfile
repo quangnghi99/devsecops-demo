@@ -63,7 +63,12 @@ pipeline {
 
     stage('Trivy FileSystem Scan') {
       steps {
-        sh 'trivy fs --scanners vuln,secret,misconfig --format template --template "@contrib/html.tpl" -o trivy-fs-report.html .'
+        sh '''
+          trivy fs --scanners vuln,secret,misconfig \
+            --format template --template "@/usr/local/share/trivy/templates/html.tpl" \
+            -o trivy-fs-report.html \
+            .
+        '''
       }
     }
 
@@ -95,7 +100,7 @@ pipeline {
 
     stage('Trivy Image Scan') {
       steps {
-        sh 'trivy image --format template --template "@contrib/html.tpl" -o trivy-image-report.html ${imageGroup}/${imageName}:${version}'
+        sh 'trivy image --format template --template "@/usr/local/share/trivy/templates/html.tpl" -o trivy-image-report.html ${imageGroup}/${imageName}:${version}'
       }
     }
   }
