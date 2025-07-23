@@ -51,6 +51,19 @@ pipeline {
       }
     }
 
+    stage('OWASP FS SCAN') {
+      steps {
+        dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', nvdCredentialsId: 'NVD', odcInstallation: 'DP'
+        dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+      }
+    }
+
+    stage('Trivy FileSystem Scan') {
+      steps {
+        sh 'trivy fs --format template --template "/usr/local/share/trivy/templates/html.tpl" -o trivy-fs-report.html .'
+      }
+    }
+
     stage('Static Code Analysis') {
       steps {
         sh 'npm run lint'
@@ -60,13 +73,6 @@ pipeline {
     stage('Unit Test') {
       steps {
         sh 'npm test'
-      }
-    }
-
-    stage('OWASP FS SCAN') {
-      steps {
-        dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP'
-        dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
       }
     }
 
