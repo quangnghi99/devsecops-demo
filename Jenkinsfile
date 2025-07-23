@@ -1,4 +1,7 @@
 // Image info
+def imageGroup = 'quangnghi'
+def imageName = 'tictactoe'
+def version = 'v1.0.0'
 // Registry info
 
 pipeline {
@@ -60,7 +63,7 @@ pipeline {
 
     stage('Trivy FileSystem Scan') {
       steps {
-        sh 'trivy fs --format template --template "/usr/local/share/trivy/templates/html.tpl" -o trivy-fs-report.html .'
+        sh 'trivy fs --scanners vuln,secret,misconfig --format template --template "@contrib/html.tpl" -o trivy-fs-report.html .'
       }
     }
 
@@ -76,12 +79,25 @@ pipeline {
       }
     }
 
-    stage('Build') {
+    stage('Build docker and push to DockerHub') {
+        steps {
+            echo "Building docker image..."
+            script {
+                def dockerImage = docker.build("${imageGroup}/${imageName}:${version}", ".")
+                //docker.withRegistry( docker_registry, dockerHubCredentialId ) {                       
+				        //    dockerImage.push(version)
+			          //}
+                // Remove the image from the local docker
+                //sh "docker rmi ${imageGroup}/${imageName}:${version} -f"
+            }
+        }
+    }
+
+    stage('Trivy Image Scan') {
       steps {
-        sh 'npm run build'
+        sh 'trivy image --format template --template "@contrib/html.tpl" -o trivy-image-report.html ${imageGroup}/${imageName}:${version}'
       }
     }
-  }
 
   post {
     success {
