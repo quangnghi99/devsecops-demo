@@ -104,7 +104,7 @@ pipeline {
           trivy image \
             --format template --template "@/usr/local/share/trivy/templates/html.tpl" \
             -o trivy-image-report.html \
-            ${imageGroup}/${imageName}:${version}Ư
+            ${imageGroup}/${imageName}:${version}
         '''
       }
     }
