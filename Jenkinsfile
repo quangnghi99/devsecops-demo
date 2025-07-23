@@ -102,12 +102,12 @@ pipeline {
       steps {
         script {
           echo "Scanning docker image with Trivy..."
-          def imageName = "${imageGroup}/${imageName}:${version}"
+          def imageFullName = "${imageGroup}/${imageName}:${version}"
           sh '''
             trivy image \
               --format template --template "@/usr/local/share/trivy/templates/html.tpl" \
               -o trivy-image-report.html \
-              ${imageName}
+              ${imageFullName}
           '''
         }
       }
