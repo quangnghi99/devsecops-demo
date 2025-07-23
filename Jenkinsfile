@@ -98,6 +98,7 @@ pipeline {
         sh 'trivy image --format template --template "@contrib/html.tpl" -o trivy-image-report.html ${imageGroup}/${imageName}:${version}'
       }
     }
+  }
 
   post {
     success {
