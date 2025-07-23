@@ -100,7 +100,12 @@ pipeline {
 
     stage('Trivy Image Scan') {
       steps {
-        sh 'trivy image --format template --template "@/usr/local/share/trivy/templates/html.tpl" -o trivy-image-report.html ${imageGroup}/${imageName}:${version}'
+        sh '''
+          trivy image \
+            --format template --template "@/usr/local/share/trivy/templates/html.tpl" \
+            -o trivy-image-report.html \
+            ${imageGroup}/${imageName}:${version}Ư
+        '''
       }
     }
   }
