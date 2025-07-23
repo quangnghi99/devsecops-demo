@@ -84,7 +84,7 @@ pipeline {
       }
     }
 
-    stage('Build docker and push to DockerHub') {
+    stage('Build docker image') {
         steps {
             echo "Building docker image..."
             script {
@@ -101,14 +101,58 @@ pipeline {
     stage('Trivy Image Scan') {
       steps {
         script {
-          echo "Scanning docker image with Trivy..."
           def imageFullName = "${imageGroup}/${imageName}:${version}"
+          echo "Scanning docker image ${imageFullName} with Trivy"
           sh """
-            trivy image \
-              --format template --template "@/usr/local/share/trivy/templates/html.tpl" \
-              -o trivy-image-report.html \
-              ${imageFullName}
+            trivy image ${imageFullName} \
+                --severity LOW,MEDIUM,HIGH \
+                --exit-code 0 \
+                --quiet \
+                --format json -o trivy-image-MEDIUM-results.json
+
+
+            trivy image ${imageFullName} \
+                --severity CRITICAL \
+                --exit-code 1 \
+                --quiet \
+                --format json -o trivy-image-CRITICAL-results.json
           """
+          sh """
+            trivy convert \
+              --format template \
+              --template "/usr/local/share/trivy/templates/html.tpl" \
+              --output trivy-image-MEDIUM-results.html \
+              trivy-image-MEDIUM-results.json
+
+
+            trivy convert \
+              --format template \
+              --template "/usr/local/share/trivy/templates/html.tpl" \
+              --output trivy-image-CRITICAL-results.html \
+              trivy-image-CRITICAL-results.json
+          """
+        }
+      }
+      post {
+          always {
+            publishHTML([
+                allowMissing: true, 
+                alwaysLinkToLastBuild: true, 
+                keepAll: true,
+                reportDir: '.', 
+                reportFiles: 'trivy-image-*.html', 
+                reportName: 'Trivy HTML Reports'
+            ])
+        }
+      }
+    }
+
+    stage('Run Docker Image Test') {
+      steps {
+        script {
+          def imageFullName = "${imageGroup}/${imageName}:${version}"
+          echo "Running docker image ${imageFullName}"
+          sh "docker run -d --name tictactoe -p 80:80 ${imageFullName}"
         }
       }
     }
