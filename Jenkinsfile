@@ -103,7 +103,7 @@ pipeline {
       steps {
         echo "Building docker image..."
         script {
-          docker.build("${dockerImage}", ".")
+          docker.build("${env.dockerImage}", ".")
         }
       }
     }
@@ -111,15 +111,15 @@ pipeline {
     stage('Trivy Image Scan') {
       steps {
         script {
-          echo "Scanning docker image ${dockerImage} with Trivy"
+          echo "Scanning docker image ${env.dockerImage} with Trivy"
           sh """
-            trivy image ${dockerImage} \
+            trivy image ${env.dockerImage} \
                 --severity LOW,MEDIUM,HIGH \
                 --exit-code 0 \
                 --quiet \
                 --format json -o trivy-image-MEDIUM-results.json
 
-            trivy image ${dockerImage} \
+            trivy image ${env.dockerImage} \
                 --severity CRITICAL \
                 --exit-code 1 \
                 --quiet \
@@ -157,14 +157,14 @@ pipeline {
     
     stage('Push docker image') {
       steps {
-        echo "Push docker image ${dockerImage} to registry..."
+        echo "Push docker image ${env.dockerImage} to registry..."
         script {
-            docker.withRegistry( docker_registry, dockerHubCredentialId ) {                       
-			          dockerImage.push(version)
-		        }
-            // Remove the image from the local docker
-            sh "docker rmi ${dockerImage} -f"
-        }
+          docker.withRegistry( docker_registry, dockerHubCredentialId ) {                       
+			      sh "docker push ${env.dockerImage}"
+          }
+          // Remove the image from the local docker
+          sh "docker rmi ${env.dockerImage} -f"
+		    }
       }
     }
   }
