@@ -3,7 +3,7 @@ def imageGroup = 'quangnghi'
 def imageName = 'tictactoe'
 def version = 'v1.0.0'
 // Registry info
-def dockerHubCredentialId = 'docker'
+def dockerHubCredentialId = 'dockerhub'
 def docker_registry = 'https://index.docker.io/v1/'
 
 pipeline {
