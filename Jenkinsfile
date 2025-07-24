@@ -161,10 +161,10 @@ pipeline {
           def dockerImage = "${imageGroup}/${imageName}:${version}"
           echo "Push docker image ${dockerImage} to registry..."
           docker.withRegistry( docker_registry, dockerHubCredentialId ) {                       
-			      dockerImage.push(version)
+			      sh "docker push ${dockerImage}"
           }
           // Remove the image from the local docker
-          sh "docker rmi ${imageGroup}/${imageName}:${version} -f"
+          sh "docker rmi ${dockerImage} -f"
 		    }
       }
     }
