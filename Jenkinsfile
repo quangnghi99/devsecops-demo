@@ -3,13 +3,16 @@ def imageGroup = 'quangnghi'
 def imageName = 'tictactoe'
 def version = 'v1.0.0'
 // Registry info
+def dockerHubCredentialId = 'docker'
+def docker_registry = 'https://index.docker.io/v1/'
 
 pipeline {
   agent { label 'jenkins-agent' }
 
   environment {
     //NODE_ENV = "$env.BRANCH_NAME"
-    SCANNER_HOME=tool 'sonar-scanner'
+    SCANNER_HOME = tool 'sonar-scanner'
+    dockerImage  = '${imageGroup}/${imageName}:${version}'
   }
 
   options {
@@ -70,6 +73,18 @@ pipeline {
             .
         '''
       }
+      post {
+        always {
+          publishHTML([
+              allowMissing: true, 
+              alwaysLinkToLastBuild: true, 
+              keepAll: true,
+              reportDir: '.', 
+              reportFiles: 'trivy-fs-*.html', 
+              reportName: 'Trivy HTML Reports'
+          ])
+        }
+      }
     }
 
     stage('Static Code Analysis') {
@@ -85,45 +100,38 @@ pipeline {
     }
 
     stage('Build docker image') {
-        steps {
-            echo "Building docker image..."
-            script {
-                def dockerImage = docker.build("${imageGroup}/${imageName}:${version}", ".")
-                //docker.withRegistry( docker_registry, dockerHubCredentialId ) {                       
-				        //    dockerImage.push(version)
-			          //}
-                // Remove the image from the local docker
-                //sh "docker rmi ${imageGroup}/${imageName}:${version} -f"
-            }
+      steps {
+        echo "Building docker image..."
+        script {
+          docker.build("${dockerImage}", ".")
         }
+      }
     }
 
     stage('Trivy Image Scan') {
       steps {
         script {
-          def imageFullName = "${imageGroup}/${imageName}:${version}"
-          echo "Scanning docker image ${imageFullName} with Trivy"
+          echo "Scanning docker image ${dockerImage} with Trivy"
           sh """
-            trivy image ${imageFullName} \
+            trivy image ${dockerImage} \
                 --severity LOW,MEDIUM,HIGH \
                 --exit-code 0 \
                 --quiet \
                 --format json -o trivy-image-MEDIUM-results.json
 
-
-            trivy image ${imageFullName} \
+            trivy image ${dockerImage} \
                 --severity CRITICAL \
                 --exit-code 1 \
                 --quiet \
                 --format json -o trivy-image-CRITICAL-results.json
           """
+
           sh """
             trivy convert \
               --format template \
               --template "@/usr/local/share/trivy/templates/html.tpl" \
               --output trivy-image-MEDIUM-results.html \
               trivy-image-MEDIUM-results.json
-
 
             trivy convert \
               --format template \
@@ -146,13 +154,16 @@ pipeline {
         }
       }
     }
-
-    stage('Run Docker Image Test') {
+    
+    stage('Build docker image') {
       steps {
+        echo "Push docker image ${dockerImage} to registry..."
         script {
-          def imageFullName = "${imageGroup}/${imageName}:${version}"
-          echo "Running docker image ${imageFullName}"
-          sh "docker run -d --name tictactoe -p 80:80 ${imageFullName}"
+            docker.withRegistry( docker_registry, dockerHubCredentialId ) {                       
+			          dockerImage.push(version)
+		        }
+            // Remove the image from the local docker
+            sh "docker rmi ${dockerImage} -f"
         }
       }
     }
@@ -161,6 +172,9 @@ pipeline {
   post {
     success {
       echo '✅ Build completed successfully!'
+        }
+    unstable {
+      echo 'Unstable :/'
         }
     failure {
       echo '❌ Build failed.'
