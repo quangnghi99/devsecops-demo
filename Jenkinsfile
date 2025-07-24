@@ -1,6 +1,7 @@
 // Image info
 def imageGroup = 'quangnghi'
 def imageName = 'tictactoe'
+def version = 'v1.0.0'
 // Registry info
 def dockerHubCredentialId = 'dockerhub'
 def docker_registry = 'https://index.docker.io/v1/'
@@ -11,8 +12,6 @@ pipeline {
   environment {
     //NODE_ENV = "$env.BRANCH_NAME"
     SCANNER_HOME = tool 'sonar-scanner'
-    dockerImage  = '${imageGroup}/${imageName}'
-    version = 'v1.0.0'
   }
 
   options {
@@ -103,7 +102,7 @@ pipeline {
       steps {
         echo "Building docker image..."
         script {
-          docker.build("${dockerImage}:${version}", ".")
+          docker.build("${imageGroup}/${imageName}:${version}", ".")
         }
       }
     }
@@ -111,15 +110,16 @@ pipeline {
     stage('Trivy Image Scan') {
       steps {
         script {
-          echo "Scanning docker image ${dockerImage}:${version} with Trivy"
+          def dockerImage = "${imageGroup}/${imageName}:${version}"
+          echo "Scanning docker image ${dockerImage} with Trivy"
           sh """
-            trivy image ${dockerImage}:${version} \
+            trivy image ${dockerImage} \
                 --severity LOW,MEDIUM,HIGH \
                 --exit-code 0 \
                 --quiet \
                 --format json -o trivy-image-MEDIUM-results.json
 
-            trivy image ${dockerImage}:${version} \
+            trivy image ${dockerImage} \
                 --severity CRITICAL \
                 --exit-code 1 \
                 --quiet \
@@ -157,13 +157,14 @@ pipeline {
     
     stage('Push docker image') {
       steps {
-        echo "Push docker image ${dockerImage}:${version} to registry..."
+        echo "Push docker image ${dockerImage} to registry..."
         script {
+          def dockerImage = "${imageGroup}/${imageName}:${version}"
           docker.withRegistry( docker_registry, dockerHubCredentialId ) {                       
-			      sh "docker push ${dockerImage}:${version}"
+			      dockerImage.push(version)
           }
           // Remove the image from the local docker
-          sh "docker rmi ${dockerImage}:${version} -f"
+          sh "docker rmi ${imageGroup}/${imageName}:${version} -f"
 		    }
       }
     }
