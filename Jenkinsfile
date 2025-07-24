@@ -17,6 +17,7 @@ def sendTelegramMessage(message) {
         -d parse_mode=Markdown \\
         --data-urlencode "text=${message}"
     """
+  }
 }
 
 pipeline {
