@@ -6,6 +6,19 @@ def version = 'v1.0.0'
 def dockerHubCredentialId = 'dockerhub'
 def docker_registry = 'https://index.docker.io/v1/'
 
+def sendTelegramMessage(message) {
+  withCredentials([
+    string(credentialsId: 'BotTeleToken', variable: 'TELEGRAM_BOT_TOKEN'),
+    string(credentialsId: 'chatID', variable: 'TELEGRAM_CHAT_ID')
+  ]) {
+    sh """
+      curl -s -X POST https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage \\
+        -d chat_id=${TELEGRAM_CHAT_ID} \\
+        -d parse_mode=Markdown \\
+        --data-urlencode "text=${message}"
+    """
+}
+
 pipeline {
   agent { label 'jenkins-agent' }
 
@@ -172,13 +185,19 @@ pipeline {
 
   post {
     success {
-      echo '✅ Build completed successfully!'
-        }
-    unstable {
-      echo 'Unstable :/'
-        }
-    failure {
-      echo '❌ Build failed.'
-        }
+      script {
+        sendTelegramMessage("✅ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} success.")
+      }
     }
+    failure {
+      script {
+        sendTelegramMessage("❌ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} failure.")
+      }
+    }
+    unstable {
+      script {
+        sendTelegramMessage("⚠️ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} unstable.")
+      }
+    }
+  }
 }
