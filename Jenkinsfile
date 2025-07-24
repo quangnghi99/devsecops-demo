@@ -157,9 +157,9 @@ pipeline {
     
     stage('Push docker image') {
       steps {
-        echo "Push docker image ${dockerImage} to registry..."
         script {
           def dockerImage = "${imageGroup}/${imageName}:${version}"
+          echo "Push docker image ${dockerImage} to registry..."
           docker.withRegistry( docker_registry, dockerHubCredentialId ) {                       
 			      dockerImage.push(version)
           }
