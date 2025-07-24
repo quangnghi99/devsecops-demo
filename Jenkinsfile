@@ -1,7 +1,7 @@
 // Image info
 def imageGroup = 'quangnghi'
 def imageName = 'tictactoe'
-def version = 'v1.0.0'
+def version = "${env.BRANCH_NAME}-v1.${env.BUILD_NUMBER}"
 // Registry info
 def dockerHubCredentialId = 'dockerhub'
 def docker_registry = 'https://index.docker.io/v1/'
@@ -192,7 +192,12 @@ pipeline {
     }
     failure {
       script {
-        sendTelegramMessage("❌ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} failure.")
+        def buildUrl = env.BUILD_URL + "console"
+        def message = """
+          ❌ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} failure.
+          [Console Output](${buildUrl})
+        """.stripIndent()
+        sendTelegramMessage(message)
       }
     }
     unstable {
