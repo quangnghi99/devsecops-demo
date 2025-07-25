@@ -1,3 +1,6 @@
+// Library for Jenkinsfile
+@Library('jenkins-shared-lib') _
+
 // Image info
 def imageGroup = 'quangnghi'
 def imageName = 'tictactoe'
@@ -5,20 +8,6 @@ def version = "${env.BRANCH_NAME}-v1.${env.BUILD_NUMBER}"
 // Registry info
 def dockerHubCredentialId = 'dockerhub'
 def docker_registry = 'https://index.docker.io/v1/'
-
-def sendTelegramMessage(message) {
-  withCredentials([
-    string(credentialsId: 'BotTeleToken', variable: 'TELEGRAM_BOT_TOKEN'),
-    string(credentialsId: 'chatID', variable: 'TELEGRAM_CHAT_ID')
-  ]) {
-    sh """
-      curl -s -X POST https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage \\
-        -d chat_id=${TELEGRAM_CHAT_ID} \\
-        -d parse_mode=Markdown \\
-        --data-urlencode "text=${message}"
-    """
-  }
-}
 
 pipeline {
   agent { label 'jenkins-agent' }
@@ -125,45 +114,19 @@ pipeline {
       steps {
         script {
           def dockerImage = "${imageGroup}/${imageName}:${version}"
+          def failOnCritical = false
+          def output = "trivy-image-results"
           echo "Scanning docker image ${dockerImage} with Trivy"
-          sh """
-            trivy image ${dockerImage} \
-                --severity LOW,MEDIUM,HIGH \
-                --exit-code 0 \
-                --quiet \
-                --format json -o trivy-image-MEDIUM-results.json
-
-            trivy image ${dockerImage} \
-                --severity CRITICAL \
-                --exit-code 1 \
-                --quiet \
-                --format json -o trivy-image-CRITICAL-results.json
-          """
-
-          sh """
-            trivy convert \
-              --format template \
-              --template "@/usr/local/share/trivy/templates/html.tpl" \
-              --output trivy-image-MEDIUM-results.html \
-              trivy-image-MEDIUM-results.json
-
-            trivy convert \
-              --format template \
-              --template "@/usr/local/share/trivy/templates/html.tpl" \
-              --output trivy-image-CRITICAL-results.html \
-              trivy-image-CRITICAL-results.json
-          """
+          trivyScan.scanImage(dockerImage, "${output}.json", failOnCritical)
+          trivyScan.convertJsonToHtml("${output}.json", "${output}.html")
         }
       }
       post {
           always {
-            publishHTML([
-                allowMissing: true, 
-                alwaysLinkToLastBuild: true, 
-                keepAll: true,
-                reportDir: '.', 
-                reportFiles: 'trivy-image-*.html', 
-                reportName: 'Trivy HTML Reports'
+            trivyScan.publishTrivyReports([
+              reportName: 'Trivy Image Results',
+              reportFiles: 'trivy-image-results.html',
+              reportDir: '.',
             ])
         }
       }
@@ -187,7 +150,12 @@ pipeline {
   post {
     success {
       script {
-        sendTelegramMessage("✅ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} success.")
+        def buildUrl = env.BUILD_URL + "console"
+        def message = """
+          ✅ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} success.
+          [Console Output](${buildUrl})
+        """.stripIndent()
+        sendTelegramMessage(message)
       }
     }
     failure {
