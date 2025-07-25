@@ -123,13 +123,15 @@ pipeline {
       }
       post {
           always {
-            trivyScan.publishTrivyReports([
-              reportName: 'Trivy Image Results',
-              reportFiles: 'trivy-image-results.html',
-              reportDir: '.',
-            ])
+            script {
+              trivyScan.publishTrivyReports([
+                reportName: 'Trivy Image Results',
+                reportFiles: 'trivy-image-results.html',
+                reportDir: '.',
+              ])
+            }
+          }
         }
-      }
     }
     
     stage('Push docker image') {
@@ -149,7 +151,6 @@ pipeline {
 
   post {
     success {
-      node {
         script {
           def buildUrl = env.BUILD_URL + "console"
           def message = """
@@ -158,10 +159,9 @@ pipeline {
           """.stripIndent()
           sendTelegramMessage(message)
         }
-      }
+      
     }
     failure {
-      node {
         script {
           def buildUrl = env.BUILD_URL + "console"
           def message = """
@@ -170,14 +170,14 @@ pipeline {
           """.stripIndent()
           sendTelegramMessage(message)
         }
-      }
+      
     }
     unstable {
-        node {
+
         script {
           sendTelegramMessage("⚠️ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} unstable.")
         }
-      }
+      
     }
   }
 }
