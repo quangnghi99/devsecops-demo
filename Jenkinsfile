@@ -149,28 +149,34 @@ pipeline {
 
   post {
     success {
-      script {
-        def buildUrl = env.BUILD_URL + "console"
-        def message = """
-          ✅ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} success.
-          [Console Output](${buildUrl})
-        """.stripIndent()
-        sendTelegramMessage(message)
+      node {
+        script {
+          def buildUrl = env.BUILD_URL + "console"
+          def message = """
+            ✅ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} success.
+            [Console Output](${buildUrl})
+          """.stripIndent()
+          sendTelegramMessage(message)
+        }
       }
     }
     failure {
-      script {
-        def buildUrl = env.BUILD_URL + "console"
-        def message = """
-          ❌ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} failure.
-          [Console Output](${buildUrl})
-        """.stripIndent()
-        sendTelegramMessage(message)
+      node {
+        script {
+          def buildUrl = env.BUILD_URL + "console"
+          def message = """
+            ❌ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} failure.
+            [Console Output](${buildUrl})
+          """.stripIndent()
+          sendTelegramMessage(message)
+        }
       }
     }
     unstable {
-      script {
-        sendTelegramMessage("⚠️ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} unstable.")
+        node {
+        script {
+          sendTelegramMessage("⚠️ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} unstable.")
+        }
       }
     }
   }
