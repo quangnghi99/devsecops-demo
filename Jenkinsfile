@@ -71,20 +71,9 @@ pipeline {
         sh '''
           trivy fs --scanners vuln,secret,misconfig \
             --format template --template "@/usr/local/share/trivy/templates/html.tpl" \
-            -o trivy-fs-report.html \
+            -o trivy-fs-results.html \
             .
         '''
-      }
-      post {
-        always {
-          script {
-            trivyScan.publishTrivyReport([
-              reportName: 'Trivy FileSystem Results',
-              reportFiles: 'trivy-fs-report.html',
-              reportDir: '.',
-            ])
-          }
-        }
       }
     }
 
@@ -124,8 +113,8 @@ pipeline {
         always {
           script {
             trivyScan.publishTrivyReport([
-              reportName: 'Trivy Image Results',
-              reportFiles: 'trivy-image-results.html',
+              reportName: 'Trivy Results',
+              reportFiles: 'trivy-*.html',
               reportDir: '.',
             ])
           }
