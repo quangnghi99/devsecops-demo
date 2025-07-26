@@ -77,14 +77,13 @@ pipeline {
       }
       post {
         always {
-          publishHTML([
-              allowMissing: true, 
-              alwaysLinkToLastBuild: true, 
-              keepAll: true,
-              reportDir: '.', 
-              reportFiles: 'trivy-fs-*.html', 
-              reportName: 'Trivy HTML Reports'
-          ])
+          script {
+            trivyScan.publishTrivyReport([
+              reportName: 'Trivy FileSystem Results',
+              reportFiles: 'trivy-fs-report.html',
+              reportDir: '.',
+            ])
+          }
         }
       }
     }
@@ -122,16 +121,16 @@ pipeline {
         }
       }
       post {
-          always {
-            script {
-              trivyScan.publishTrivyReports([
-                reportName: 'Trivy Image Results',
-                reportFiles: 'trivy-image-results.html',
-                reportDir: '.',
-              ])
-            }
+        always {
+          script {
+            trivyScan.publishTrivyReport([
+              reportName: 'Trivy Image Results',
+              reportFiles: 'trivy-image-results.html',
+              reportDir: '.',
+            ])
           }
         }
+      }
     }
     
     stage('Push docker image') {
