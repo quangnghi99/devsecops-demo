@@ -5,6 +5,7 @@
 def imageGroup = 'quangnghi'
 def imageName = 'tictactoe'
 def version = "${env.BRANCH_NAME}-v1.${env.BUILD_NUMBER}"
+def dockerImage = "${imageGroup}/${imageName}:${version}"
 // Registry info
 def dockerHubCredentialId = 'dockerhub'
 def docker_registry = 'https://index.docker.io/v1/'
@@ -101,7 +102,6 @@ pipeline {
     stage('Trivy Image Scan') {
       steps {
         script {
-          def dockerImage = "${imageGroup}/${imageName}:${version}"
           def failOnCritical = false
           def output = "trivy-image-results"
           echo "Scanning docker image ${dockerImage} with Trivy"
@@ -125,7 +125,6 @@ pipeline {
     stage('Push docker image') {
       steps {
         script {
-          def dockerImage = "${imageGroup}/${imageName}:${version}"
           echo "Push docker image ${dockerImage} to registry..."
           docker.withRegistry( docker_registry, dockerHubCredentialId ) {                       
 			      sh "docker push ${dockerImage}"
@@ -133,6 +132,15 @@ pipeline {
           // Remove the image from the local docker
           sh "docker rmi ${dockerImage} -f"
 		    }
+      }
+    }
+    stage('Update to Manifest') {
+      steps {
+        script {
+          def manifestFile = 'kubernetes/deployment.yaml'
+          echo "Updating manifest file ${manifestFile} with image ${dockerImage}"
+          sh "sed -i 's|image: .*|image: ${dockerImage}|' ${manifestFile}"
+        }
       }
     }
   }
