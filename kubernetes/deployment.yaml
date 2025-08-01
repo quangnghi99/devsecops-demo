@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: tic-tac-toe
-        image: quangnghi/tictactoe:v1.0.0
+        image: quangnghi/tictactoe:dev-1.7
         # Image will be automatically updated by CI/CD pipeline
         imagePullPolicy: Always
         ports:
