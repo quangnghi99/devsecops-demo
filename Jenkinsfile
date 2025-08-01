@@ -147,26 +147,24 @@ pipeline {
 
   post {
     success {
-        script {
-          def buildUrl = env.BUILD_URL + "console"
-          def message = """
-            ✅ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} success.
-            [Console Output](${buildUrl})
-          """.stripIndent()
-          sendTelegramMessage(message)
-        }
-      
+      script {
+        def buildUrl = env.BUILD_URL + "console"
+        def message = """
+          ✅ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} success.
+          [Console Output](${buildUrl})
+        """.stripIndent()
+        sendTelegramMessage(message)
+      }
     }
     failure {
-        script {
-          def buildUrl = env.BUILD_URL + "console"
-          def message = """
-            ❌ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} failure.
-            [Console Output](${buildUrl})
-          """.stripIndent()
-          sendTelegramMessage(message)
-        }
-      
+      script {
+        def buildUrl = env.BUILD_URL + "console"
+        def message = """
+          ❌ *${env.JOB_NAME}* build #${env.BUILD_NUMBER} failure.
+          [Console Output](${buildUrl})
+        """.stripIndent()
+        sendTelegramMessage(message)
+      }
     }
     unstable {
 
